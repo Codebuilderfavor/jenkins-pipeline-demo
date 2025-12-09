@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     options {
-        timestamps()        // show timestamps in log
+        timestamps()
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "Listing files in workspace after Git checkout:"
+                echo "=== Checkout Stage ==="
                 sh 'pwd'
                 sh 'ls -la'
             }
@@ -16,7 +16,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "Build step – simulate compilation"
+                echo "=== Build Stage (simulated) ==="
                 sh '''
                     echo "Compiling project..."
                     sleep 1
@@ -27,23 +27,44 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo "Test step – simulate running tests"
+                echo "=== Test Stage (simulated) ==="
                 sh '''
                     echo "Running unit tests..."
                     sleep 1
-                    echo "All tests passed ✅"
+                    echo "All tests passed!"
                 '''
             }
         }
 
         stage('Package') {
             steps {
-                echo "Packaging artifacts (demo)"
+                echo "=== Package Stage ==="
                 sh '''
                     mkdir -p build
-                    echo "This would be your build artifact." > build/artifact.txt
+                    echo "This is a sample build artifact." > build/artifact.txt
                     ls -la build
                 '''
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "=== Docker Build Stage ==="
+                sh """
+                    docker build -t jenkins-demo:${env.BUILD_NUMBER} .
+                    echo "Docker images (top 5):"
+                    docker images | head -n 5
+                """
+            }
+        }
+
+        stage('Docker Run (Test image)') {
+            steps {
+                echo "=== Docker Run Stage ==="
+                sh """
+                    echo "Running container..."
+                    docker run --rm jenkins-demo:${env.BUILD_NUMBER}
+                """
             }
         }
     }
