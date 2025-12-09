@@ -9,8 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "=== Checkout Stage ==="
-                sh 'pwd'
-                sh 'ls -la'
+                sh 'pwd && ls -la'
             }
         }
 
@@ -48,23 +47,34 @@ pipeline {
         }
 
         stage('Docker Build') {
+            when {
+                expression { fileExists('Dockerfile') }
+            }
             steps {
                 echo "=== Docker Build Stage ==="
-                sh """
-                    docker build -t jenkins-demo:${env.BUILD_NUMBER} .
+                sh '''
+                    echo "Current directory and files before docker build:"
+                    pwd
+                    ls -la
+
+                    echo "Building Docker image..."
+                    docker build -t jenkins-demo:${BUILD_NUMBER} .
                     echo "Docker images (top 5):"
                     docker images | head -n 5
-                """
+                '''
             }
         }
 
         stage('Docker Run (Test image)') {
+            when {
+                expression { fileExists('Dockerfile') }
+            }
             steps {
                 echo "=== Docker Run Stage ==="
-                sh """
-                    echo "Running container..."
-                    docker run --rm jenkins-demo:${env.BUILD_NUMBER}
-                """
+                sh '''
+                    echo "Running container from image jenkins-demo:${BUILD_NUMBER}"
+                    docker run --rm jenkins-demo:${BUILD_NUMBER}
+                '''
             }
         }
     }
